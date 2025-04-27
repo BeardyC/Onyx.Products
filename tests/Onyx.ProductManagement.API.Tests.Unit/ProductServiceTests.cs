@@ -19,7 +19,8 @@ public class ProductServiceTests
 
         _dbContext = new ProductsDbContext(options);
         _logger = A.Fake<ILogger<ProductService>>();
-
+        
+        SeedBaseData();
         _productService = new ProductService(_dbContext, _logger);
     }
 
@@ -52,18 +53,12 @@ public class ProductServiceTests
     public async Task ShouldReturnAllProductsIfProductsExist()
     {
         // Arrange
-        _dbContext.Products.AddRange(
-            new Data.Models.Product { Name = "Product 1", Colour = "Blue", Price = 5 },
-            new Data.Models.Product { Name = "Product 2", Colour = "Green", Price = 10 }
-        );
-        await _dbContext.SaveChangesAsync();
-
         // Act
-        var products = await _productService.GetAllProductsAsync(CancellationToken.None);
+        var products = await _productService.GetAllProductsAsync(null, null,CancellationToken.None);
 
         // Assert
         var result = products.AsT0.ToList();
-        result.Should().HaveCount(2);
+        result.Should().HaveCount(5);
         result.Should().Contain(p => p.Name == "Product 1");
         result.Should().Contain(p => p.Name == "Product 2");
     }
@@ -71,20 +66,12 @@ public class ProductServiceTests
     [Fact]
     public async Task ShouldReturnProductsByColourIfMatchingProductsExist()
     {
-        // Arrange
-        _dbContext.Products.AddRange(
-            new Data.Models.Product { Name = "Red Product 1", Colour = "Red", Price = 5 },
-            new Data.Models.Product { Name = "Red Product 2", Colour = "Red", Price = 15 },
-            new Data.Models.Product { Name = "Blue Product", Colour = "Blue", Price = 20 }
-        );
-        await _dbContext.SaveChangesAsync();
-
         // Act
         var redProducts = await _productService.GetProductsByColourAsync("Red", CancellationToken.None);
 
         // Assert
         var result = redProducts.AsT0.ToList();
-        result.Should().HaveCount(2);
+        result.Should().HaveCount(1);
         result.Should().OnlyContain(p => p.Colour == "Red");
     }
 
@@ -111,5 +98,35 @@ public class ProductServiceTests
         A.CallTo(_logger)
             .Where(call => call.Method.Name == "Log" && (LogLevel)call.Arguments[0]! == LogLevel.Critical)
             .MustHaveHappened();
+    }
+    
+    [Theory] 
+    [InlineData(1, 2, 2)] 
+    [InlineData(2, 2, 2)] 
+    [InlineData(3, 2, 1)] 
+    [InlineData(1, 5, 5)] 
+    [InlineData(2, 5, 0)] 
+    [InlineData(1, 10, 5)]
+    public async Task ShouldReturnCorrectNumberOfProductsWhenValidPaginationParametersAreProvided(int pageNumber, int pageSize, int expectedCount)
+    {
+        // Act
+        var products = await _productService.GetAllProductsAsync(pageNumber, pageSize, CancellationToken.None);
+
+        // Assert
+        var result = products.AsT0.ToList();
+        result.Should().HaveCount(expectedCount);
+    }
+    
+    private void SeedBaseData()
+    {
+        _dbContext.Products.AddRange(
+            new Data.Models.Product { Id = 1, Name = "Product 1", Colour = "Blue", Price = 5, CreatedAt = DateTime.UtcNow.AddMinutes(1) },
+            new Data.Models.Product { Id = 2, Name = "Product 2", Colour = "Green", Price = 10, CreatedAt = DateTime.UtcNow.AddMinutes(2) },
+            new Data.Models.Product { Id = 3, Name = "Product 3", Colour = "Red", Price = 15, CreatedAt = DateTime.UtcNow.AddMinutes(3) },
+            new Data.Models.Product { Id = 4, Name = "Product 4", Colour = "Yellow", Price = 20, CreatedAt = DateTime.UtcNow.AddMinutes(4) },
+            new Data.Models.Product { Id = 5, Name = "Product 5", Colour = "Orange", Price = 25, CreatedAt = DateTime.UtcNow.AddMinutes(5) }
+        );
+
+        _dbContext.SaveChanges();
     }
 }

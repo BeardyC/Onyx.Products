@@ -39,7 +39,7 @@ public class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
     public Task InitializeAsync() => _database.StartAsync();
 
     public new Task DisposeAsync() => _database.StopAsync();
-    
+
     private static void SeedTestData(ProductsDbContext dbContext)
     {
         if (dbContext.Products.Any()) 
