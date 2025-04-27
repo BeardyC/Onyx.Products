@@ -3,7 +3,7 @@
 [![Build, Test](https://github.com/BeardyC/Onyx.Products/actions/workflows/dotnet.yml/badge.svg?branch=feature%2Fpipelines)](https://github.com/BeardyC/Onyx.Products/actions/workflows/dotnet.yml)
 
 ---
-![Architecture Diagram](./docs/system-diagram.svg)
+![Architecture Diagram](./docs/system-diagram.png)
 
 ## Overview
 This is a minimal, production-grade .NET 8 Web API for managing Products, designed as part of the Onyx Commodities coding test.
