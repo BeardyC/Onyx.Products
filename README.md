@@ -11,8 +11,8 @@ This is a minimal, production-grade .NET 8 Web API for managing Products, design
 - [Running](#running)
 - [Products API Service](#products-api-service)
   - [Authentication](#authentication)
-  - [Health Check](#health-check)
   - [Endpoints](#endpoints)
+    - [Health Check](#health-check)
     - [Authentication](#authentication-1)
     - [Products](#products)
 - [Swagger Documentation](#swagger-documentation)
@@ -57,6 +57,9 @@ Example:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 ```
 
+
+## Endpoints
+
 ## Health Check
 
 - `GET /health`  
@@ -67,10 +70,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   - `200 OK` - Service is healthy and reachable.
   - `503 Service Unavailable` - Service is unhealthy or degraded.
 
-
 ---
-
-## Endpoints
 
 ### Authentication
 
