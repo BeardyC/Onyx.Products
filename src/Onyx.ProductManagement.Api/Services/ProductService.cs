@@ -3,6 +3,8 @@ using Onyx.ProductManagement.Api.Endpoints.v1.Products;
 using Onyx.ProductManagement.Api.Services.Interfaces;
 using Onyx.ProductManagement.Data.Context;
 using Product = Onyx.ProductManagement.Api.ApiModels.Product;
+using OneOf;
+using Onyx.ProductManagement.Api.Common;
 
 namespace Onyx.ProductManagement.Api.Services;
 
@@ -11,7 +13,7 @@ internal class ProductService(
     ILogger<ProductService> logger)
     : IProductService
 {
-    public async Task<int> CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
+    public async Task<OneOf<int, ApiError>>  CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
     {
         try
         {
@@ -24,19 +26,28 @@ internal class ProductService(
             };
             dbContext.Products.Add(product);
             await dbContext.SaveChangesAsync(cancellationToken);
-
+            
+            // For comms with other services we would publish a message here
+            // RMBQ, AWS SNS, Azure Svc Bus etc etc 
+            // await messageBus.PublishAsync(new ProductCreatedMessage
+            // {
+            //     ProductId = product.Id,
+            //     Name = product.Name,
+            //     Colour = product.Colour,
+            //     Price = product.Price
+            // });
+            
             return product.Id;
         }
         catch (Exception e)
         {
             logger.LogCritical("An exception occured when fetching products. Message: {ExceptionMessage}", e.Message);
+            return new ApiError("An error occured on the server while fetching data.");
 
         }
-
-        return 0; // TODO: Return OneOf<,>
     }
 
-    public async Task<IEnumerable<Product>> GetAllProductsAsync(CancellationToken cancellationToken)
+    public async Task<OneOf<IEnumerable<Product>, ApiError>>  GetAllProductsAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -48,14 +59,14 @@ internal class ProductService(
         }
         catch (Exception e)
         {
-            logger.LogCritical("An exception occured when fetching products. Message: {ExceptionMessage}", e.Message);
-        }
+            logger.LogCritical(e, "Failed to fetch all products from the database.");
 
-        return [];
+            return new ApiError("An unexpected error occurred while retrieving products.");
+        }
     }
 
 
-    public async Task<IEnumerable<Product>> GetProductsByColourAsync(string colour, CancellationToken cancellationToken)
+    public async Task<OneOf<IEnumerable<Product>, ApiError>> GetProductsByColourAsync(string colour, CancellationToken cancellationToken)
     {
         try
         {
@@ -71,13 +82,12 @@ internal class ProductService(
             logger.LogCritical(
                 "An exception occured when fetching products by colour GetProductsByColourAsync. Message: {ExceptionMessage}",
                 e.Message);
+            return new ApiError("An unexpected error occurred while retrieving products.");
         }
-
-        return [];
     }
 }
 
-public static class MappingExtension
+internal static class MappingExtension
 {
     public static Product ToDto(this Data.Models.Product p) =>
         new()

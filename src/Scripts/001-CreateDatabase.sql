@@ -1,0 +1,5 @@
+IF DB_ID('ProductsDB') IS NULL
+BEGIN
+    CREATE DATABASE ProductsDB;
+END
+GO

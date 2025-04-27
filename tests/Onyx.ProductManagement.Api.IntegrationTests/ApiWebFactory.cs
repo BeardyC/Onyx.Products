@@ -10,7 +10,7 @@ using Testcontainers.MsSql;
 
 namespace Onyx.ProductManagement.Api.IntegrationTests;
 
-public class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
+public abstract class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
 {
     private readonly MsSqlContainer _database = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
@@ -22,11 +22,11 @@ public class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
         
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveDbContextOptions<ProductsDbContext>();
-            services.AddDbContext<ProductsDbContext>(options =>
-            {
-                options.UseSqlServer(_database.GetConnectionString());
-            });
+            services.RemoveDbContextOptions<ProductsDbContext>()
+                .AddDbContext<ProductsDbContext>(options =>
+                {
+                    options.UseSqlServer(_database.GetConnectionString());
+                });
 
             var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
@@ -63,5 +63,4 @@ public class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
 
         dbContext.SaveChanges();
     }
-
 }

@@ -34,14 +34,16 @@ public class ProductServiceTests
         );
 
         // Act
-        var productId = await _productService.CreateProductAsync(request, CancellationToken.None);
+        var result = await _productService.CreateProductAsync(request, CancellationToken.None);
 
+        var productId = result.AsT0;
+        
         // Assert
         productId.Should().BeGreaterThan(0);
 
         var productInDb = await _dbContext.Products.FindAsync(productId);
         productInDb.Should().NotBeNull();
-        productInDb!.Name.Should().Be("Test Product");
+        productInDb.Name.Should().Be("Test Product");
         productInDb.Colour.Should().Be("Red");
         productInDb.Price.Should().Be(9.99m);
     }
@@ -60,7 +62,7 @@ public class ProductServiceTests
         var products = await _productService.GetAllProductsAsync(CancellationToken.None);
 
         // Assert
-        var result = products.ToList();
+        var result = products.AsT0.ToList();
         result.Should().HaveCount(2);
         result.Should().Contain(p => p.Name == "Product 1");
         result.Should().Contain(p => p.Name == "Product 2");
@@ -81,16 +83,16 @@ public class ProductServiceTests
         var redProducts = await _productService.GetProductsByColourAsync("Red", CancellationToken.None);
 
         // Assert
-        var result = redProducts.ToList();
+        var result = redProducts.AsT0.ToList();
         result.Should().HaveCount(2);
         result.Should().OnlyContain(p => p.Colour == "Red");
     }
 
     [Fact]
-    public async Task ShouldReturnZeroAndLogCriticalIfCreateProductFails()
+    public async Task ShouldReturnErrorAndLogCriticalIfCreateProductFails()
     {
         // Arrange
-        var brokenService = new ProductService(null!, _logger); // Simulate failure
+        var brokenService = new ProductService(null!, _logger);
 
         var request = new CreateProductRequest(
             Name: "Should Fail",
@@ -102,7 +104,9 @@ public class ProductServiceTests
         var result = await brokenService.CreateProductAsync(request, CancellationToken.None);
 
         // Assert
-        result.Should().Be(0);
+        result.IsT1.Should().BeTrue();
+        var errorResult = result.AsT1;
+        errorResult.Message.Should().Contain("An error occured");
 
         A.CallTo(_logger)
             .Where(call => call.Method.Name == "Log" && (LogLevel)call.Arguments[0]! == LogLevel.Critical)
