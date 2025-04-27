@@ -31,6 +31,8 @@ public class ProductsDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getutcdate())");
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            
+            entity.HasIndex(e => e.Name).IsUnique();
         });
 
     }

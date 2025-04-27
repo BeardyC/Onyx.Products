@@ -117,6 +117,29 @@ public class ProductServiceTests
         result.Should().HaveCount(expectedCount);
     }
     
+    [Fact]
+    public async Task ShouldReturnDuplicateProductErrorWhenProductWithSameNameExists()
+    {
+        // Arrange
+        var existingProductName = "Product 1";
+        var request = new CreateProductRequest(
+            Name: existingProductName,
+            Price: 9.99m,
+            Colour: "Orange"
+        );
+
+        // Act
+        var result = await _productService.CreateProductAsync(request, CancellationToken.None);
+
+        // Assert
+        result.IsT2.Should().BeTrue(); // Should be the DuplicateProductError type
+        var errorResult = result.AsT2;
+        errorResult.Message.Should().Contain($"Product with name '{existingProductName}' already exists.");
+
+        var productCount = await _dbContext.Products.CountAsync();
+        productCount.Should().Be(5);
+    }
+    
     private void SeedBaseData()
     {
         _dbContext.Products.AddRange(

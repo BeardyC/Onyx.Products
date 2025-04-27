@@ -13,11 +13,23 @@ internal class ProductService(
     ILogger<ProductService> logger)
     : IProductService
 {
-    public async Task<OneOf<int, ApiError>>  CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
+    public async Task<OneOf<int, ApiError, DuplicateProductError>>  CreateProductAsync(CreateProductRequest request, CancellationToken cancellationToken)
     {
         try
         {
             logger.LogInformation("CreateProductAsync started for product: {ProductName}", request.Name);
+            
+            // Check for duplicate product name
+            var existingProduct = await dbContext.Products
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Name == request.Name, cancellationToken);
+
+            if (existingProduct != null)
+            {
+                logger.LogWarning("Attempted to create duplicate product with name: {ProductName}", request.Name);
+                return new DuplicateProductError($"Product with name '{request.Name}' already exists.");
+            }
+            
             var product = new Data.Models.Product
             {
                 Name = request.Name,
