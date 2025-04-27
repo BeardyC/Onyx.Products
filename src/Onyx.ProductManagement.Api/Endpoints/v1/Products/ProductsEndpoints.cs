@@ -53,9 +53,11 @@ internal static class ProductsEndpoints
                 ));
     }
 
-    private static async Task<IResult> GetAllProductsAsync(IProductService productService, CancellationToken cancellationToken)
+    private static async Task<IResult> GetAllProductsAsync(
+        [AsParameters] PaginationParameters paginationParameters,
+        IProductService productService, CancellationToken cancellationToken)
     {
-        var result = await productService.GetAllProductsAsync(cancellationToken);
+        var result = await productService.GetAllProductsAsync(paginationParameters.PageNumber, paginationParameters.PageSize, cancellationToken);
 
         return result.Match<IResult>(
             products =>

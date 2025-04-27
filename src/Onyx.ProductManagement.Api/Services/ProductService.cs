@@ -50,19 +50,28 @@ internal class ProductService(
         }
     }
 
-    public async Task<OneOf<IEnumerable<Product>, ApiError>>  GetAllProductsAsync(CancellationToken cancellationToken)
+    public async Task<OneOf<IEnumerable<Product>, ApiError>>  GetAllProductsAsync(int? pageNumber, int? pageSize,CancellationToken cancellationToken)
     {
         try
         {
-            var products = await dbContext.Products
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            var query = dbContext.Products.AsNoTracking();
+            
+            // We obviously wouldn't have this in a real system.
+            // This is just for testing purposes in case we want to pull everything 
+            if (pageNumber.HasValue && pageSize.HasValue && pageNumber.Value > 0 && pageSize.Value > 0)
+            {
+                query = query
+                    .Skip((pageNumber.Value - 1) * pageSize.Value)
+                    .Take(pageSize.Value);
+            }
+            
+            var products = await query.ToListAsync(cancellationToken);
 
             return products.Select(p => p.ToDto()).ToList();
         }
         catch (Exception e)
         {
-            logger.LogCritical(e, "Failed to fetch all products from the database.");
+            logger.LogCritical(e, "Failed to fetch products from the database.");
             
             return new ApiError("An unexpected error occurred while retrieving products.");
         }

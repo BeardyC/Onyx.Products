@@ -6,13 +6,16 @@ using Onyx.ProductManagement.Api.ApiModels;
 using Onyx.ProductManagement.Api.Common;
 using Onyx.ProductManagement.Api.Endpoints.v1.Products;
 using Onyx.ProductManagement.Api.Services.Interfaces;
+using Onyx.ProductManagement.Data.Context;
 
 namespace Onyx.ProductManagement.Api.IntegrationTests;
 
+[Collection("ProductsApiTests")]
 public class ProductsApiTests : IClassFixture<ApiWebFactory>
 {
     private readonly HttpClient _client;
     private readonly ITokenService _tokenService;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public ProductsApiTests(ApiWebFactory factory)
     {
@@ -20,6 +23,8 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
 
         var sp = factory.Services.CreateScope().ServiceProvider;
         _tokenService = sp.GetRequiredService<ITokenService>();
+        _scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>(); // Add this line
+
     }
 
     private void AuthenticateClient(string username)
@@ -78,14 +83,13 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
     {
         // Arrange
         AuthenticateClient("readUser");
-        var request = new CreateProductRequest(
-        
-            Name: "Test Product",
-            Colour: "Blue",
-            Price: 49.99m
-        );
-
-        await _client.PostAsJsonAsync("/v1/products", request);
+        var productsToSeed = new[]
+        {
+            new Data.Models.Product { Name = "Product A", Colour = "Black", Price = 10.00m, CreatedAt = DateTime.UtcNow },
+            new Data.Models.Product { Name = "Product B", Colour = "White", Price = 20.00m, CreatedAt = DateTime.UtcNow.AddMinutes(1) },
+            new Data.Models.Product { Name = "Product C", Colour = "Green", Price = 30.00m, CreatedAt = DateTime.UtcNow.AddMinutes(2) }
+        };
+        await SeedTestDataAsync(productsToSeed);
 
         // Act
         var response = await _client.GetAsync("/v1/products");
@@ -95,7 +99,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
 
         var products = await response.Content.ReadFromJsonAsync<IEnumerable<Product>>();
         products.Should().NotBeNull();
-        products.Should().ContainSingle(p => p.Name == "Blue Product" && p.Colour == "Blue");
+        products.Should().ContainSingle(p => p.Name == "Product A" && p.Colour == "Black");
     }
 
     [Fact]
@@ -104,7 +108,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         // Arrange
         AuthenticateClient("writeUser");
         var createRequest = new CreateProductRequest(
-            Name: "Green Product",
+            Name: "Product A",
             Colour: "Green",
             Price: 29.99m
         );
@@ -180,5 +184,47 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         validationFailureResponses.Should().Contain(e => e.PropertyName == "Name");
         validationFailureResponses.Should().Contain(e => e.PropertyName == "Price");
         validationFailureResponses.Should().Contain(e => e.PropertyName == "Colour");
+    }
+    
+    [Theory]
+    [InlineData(1, 2, 2)]
+    [InlineData(2, 2, 1)]
+    [InlineData(1, 5, 3)]
+    [InlineData(2, 5, 0)]
+    public async Task ShouldReturnPaginatedProductsWhenPaginationParametersAreProvided(int pageNumber, int pageSize, int expectedCount)
+    {
+        // Arrange
+        var productsToSeed = new[]
+        {
+            new Data.Models.Product { Name = "Product A", Colour = "Black", Price = 10.00m, CreatedAt = DateTime.UtcNow },
+            new Data.Models.Product { Name = "Product B", Colour = "White", Price = 20.00m, CreatedAt = DateTime.UtcNow.AddMinutes(1) },
+            new Data.Models.Product { Name = "Product C", Colour = "Green", Price = 30.00m, CreatedAt = DateTime.UtcNow.AddMinutes(2) }
+        };
+        await SeedTestDataAsync(productsToSeed);
+        AuthenticateClient("readUser");
+
+        // Act
+        var response = await _client.GetAsync($"/v1/products?pageNumber={pageNumber}&pageSize={pageSize}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var products = await response.Content.ReadFromJsonAsync<IEnumerable<Product>>();
+        products.Should().NotBeNull();
+        products.Should().HaveCount(expectedCount);
+    }
+    
+    private async Task SeedTestDataAsync(params Data.Models.Product[] productsToSeed)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ProductsDbContext>();
+
+        dbContext.Products.RemoveRange(dbContext.Products);
+        await dbContext.SaveChangesAsync();
+
+        if (productsToSeed.Any())
+        {
+            await dbContext.Products.AddRangeAsync(productsToSeed);
+            await dbContext.SaveChangesAsync();
+        }
     }
 }
