@@ -25,13 +25,14 @@ internal static class ProductsEndpoints
     }
 
     private static async Task<IResult> CreateProductAsync(
-        CreateProductRequest request,
-        IValidator<CreateProductRequest> validator,
-        IProductService productService, CancellationToken cancellationToken)
+        CreateProductRequest request, IValidator<CreateProductRequest> validator,
+        IProductService productService, ILogger<IApiMarker> logger, CancellationToken cancellationToken)
     {
+        logger.LogInformation("Received CreateProduct request for product: {ProductName}", request.Name);
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
         {
+            logger.LogWarning("Validation failed for CreateProduct request: {ValidationErrors}", validationResult.Errors);
             var errors = validationResult.Errors.Select(error => new ValidationFailureResponse
             {
                 PropertyName = error.PropertyName,
@@ -45,18 +46,23 @@ internal static class ProductsEndpoints
         return result.Match<IResult>(
             productId =>
                 Results.Created($"/v1/products/{productId}", productId),
-            error => 
-                Results.Problem(
+            error =>
+            {
+                logger.LogError("Product creation failed: {ErrorMessage}", error.Message);
+                return Results.Problem(
                     statusCode: StatusCodes.Status500InternalServerError,
                     title: "Product Creation Failed",
                     detail: error.Message
-                ));
+                );
+            });
     }
 
     private static async Task<IResult> GetAllProductsAsync(
-        [AsParameters] PaginationParameters paginationParameters,
-        IProductService productService, CancellationToken cancellationToken)
+        [AsParameters] PaginationParameters paginationParameters, IProductService productService,
+        ILogger<IApiMarker> logger, CancellationToken cancellationToken)
     {
+        logger.LogInformation("Received GetAllProducts request with pagination: PageNumber={PageNumber}, PageSize={PageSize}",
+            paginationParameters.PageNumber, paginationParameters.PageSize);
         var result = await productService.GetAllProductsAsync(paginationParameters.PageNumber, paginationParameters.PageSize, cancellationToken);
 
         return result.Match<IResult>(

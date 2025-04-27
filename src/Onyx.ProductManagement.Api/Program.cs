@@ -13,6 +13,10 @@ builder.Services.AddServiceDependencies(configuration)
     .AddEndpointsApiExplorer()
     .AddSwaggerDocumentation();
 
+// Add instrumentation for observability - Otel/Xray etc..
+// Add Serilog for structured logging
+// Move keys to vault or similar 
+
 var app = builder.Build();
 app.UseHttpLogging();
 app.UseSwagger()
