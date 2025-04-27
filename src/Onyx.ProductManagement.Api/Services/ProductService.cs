@@ -19,7 +19,6 @@ internal class ProductService(
         {
             logger.LogInformation("CreateProductAsync started for product: {ProductName}", request.Name);
             
-            // Check for duplicate product name
             var existingProduct = await dbContext.Products
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Name == request.Name, cancellationToken);

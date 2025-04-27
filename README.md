@@ -11,8 +11,8 @@ This is a minimal, production-grade .NET 8 Web API for managing Products, design
 - [Running](#running)
 - [Products API Service](#products-api-service)
   - [Authentication](#authentication)
-  - [Health Check](#health-check)
   - [Endpoints](#endpoints)
+    - [Health Check](#health-check)
     - [Authentication](#authentication-1)
     - [Products](#products)
 - [Swagger Documentation](#swagger-documentation)
@@ -57,6 +57,9 @@ Example:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 ```
 
+
+## Endpoints
+
 ## Health Check
 
 - `GET /health`  
@@ -66,11 +69,29 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   **Response codes:**
   - `200 OK` - Service is healthy and reachable.
   - `503 Service Unavailable` - Service is unhealthy or degraded.
+ 
+  **Response example:**
 
-
+  ```json
+  {
+    "status": "Healthy",
+    "checks": [
+      {
+        "name": "api_status",
+        "status": "Healthy",
+        "description": "API is running.",
+        "duration": 0.0000031
+      },
+      {
+        "name": "products_db",
+        "status": "Healthy",
+        "description": null,
+        "duration": 0.0011731
+      }
+    ]
+  }
+  ```
 ---
-
-## Endpoints
 
 ### Authentication
 
@@ -180,13 +201,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
   - `500 Internal Server Error` - Returned if an unexpected error occurs while fetching products by colour.    
 
-Sources and related content
-
-
 ---
 
 # Swagger Documentation
 
-You can access the full interactive API documentation via Swagger UI when running locally or in your development environment.
+You can access the full interactive API documentation via the Swagger UI.
 
 ---

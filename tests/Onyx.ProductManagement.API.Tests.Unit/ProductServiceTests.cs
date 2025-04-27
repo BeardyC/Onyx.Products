@@ -132,7 +132,7 @@ public class ProductServiceTests
         var result = await _productService.CreateProductAsync(request, CancellationToken.None);
 
         // Assert
-        result.IsT2.Should().BeTrue(); // Should be the DuplicateProductError type
+        result.IsT2.Should().BeTrue();
         var errorResult = result.AsT2;
         errorResult.Message.Should().Contain($"Product with name '{existingProductName}' already exists.");
 
