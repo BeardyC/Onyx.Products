@@ -64,6 +64,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
   **Response codes:**
   - `200 OK` - Service is healthy and reachable.
+  - `503 Service Unavailable` - Service is unhealthy or degraded.
+
 
 ---
 
@@ -80,6 +82,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
   **Response codes:**
   - `200 OK` - User authentication information retrieved successfully.
+  - `400 Bad Request` - Returned if the username is not provided.
+  - `401 Unauthorized` - Returned if the specified user is unknown or invalid.
+
 
 ---
 
@@ -101,6 +106,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
   **Response codes:**
   - `200 OK` - Product created successfully.
+  - `201 Created` - Product created successfully. The response includes the ID of the created product and a Location header pointing to the new resource.
+  - `400 Bad Request` - Returned for invalid product data due to validation errors.
+  - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
+  - `500 Internal Server Error` - Returned if an unexpected error occurs during product creation.
 
 ---
 
@@ -133,6 +142,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
   **Response codes:**
   - `200 OK` - Products retrieved successfully.
+  - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
+  - `500 Internal Server Error` - Returned if an unexpected error occurs while fetching products. 
 
 ---
 
@@ -164,6 +175,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
   **Response codes:**
   - `200 OK` - Products with the specified colour retrieved successfully.
+  - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
+  - `500 Internal Server Error` - Returned if an unexpected error occurs while fetching products by colour.    
+
+Sources and related content
+
 
 ---
 
