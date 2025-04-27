@@ -3,8 +3,10 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Onyx.ProductManagement.Api.Common;
 using Onyx.ProductManagement.Api.Constants;
 using Onyx.ProductManagement.Api.Services.Interfaces;
+using OneOf;
 
 namespace Onyx.ProductManagement.Api.Services;
 
@@ -22,7 +24,7 @@ internal class TokenService(IOptions<JwtSettings> jwtOptions) : ITokenService
     }.AsReadOnly();
 
     
-    public string GenerateToken(string username)
+    public OneOf<string, ApiError> GenerateToken(string username)
     {
         var claims = new List<Claim>
         {
@@ -36,7 +38,7 @@ internal class TokenService(IOptions<JwtSettings> jwtOptions) : ITokenService
         }
         else
         {
-            claims.Add(new Claim(ClaimTypes.Role, AppRoles.ProductReadAccess));
+            return new ApiError("Unknown or invalid user specified.");
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));

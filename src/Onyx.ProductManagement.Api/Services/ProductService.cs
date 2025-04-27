@@ -42,6 +42,9 @@ internal class ProductService(
         catch (Exception e)
         {
             logger.LogCritical("An exception occured when fetching products. Message: {ExceptionMessage}", e.Message);
+            
+            // We should also publish a message on failure
+            // We can consume the failure elsewhere and deal with them
             return new ApiError("An error occured on the server while fetching data.");
 
         }
@@ -60,7 +63,7 @@ internal class ProductService(
         catch (Exception e)
         {
             logger.LogCritical(e, "Failed to fetch all products from the database.");
-
+            
             return new ApiError("An unexpected error occurred while retrieving products.");
         }
     }
