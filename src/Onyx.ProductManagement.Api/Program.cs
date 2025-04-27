@@ -13,6 +13,9 @@ builder.Services.AddServiceDependencies(configuration)
     .AddEndpointsApiExplorer()
     .AddSwaggerDocumentation();
 
+// Add Otel for observability
+// Add Serilog for structured logging
+
 var app = builder.Build();
 app.UseHttpLogging();
 app.UseSwagger()

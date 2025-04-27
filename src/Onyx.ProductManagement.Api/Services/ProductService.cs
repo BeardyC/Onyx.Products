@@ -17,6 +17,7 @@ internal class ProductService(
     {
         try
         {
+            logger.LogInformation("CreateProductAsync started for product: {ProductName}", request.Name);
             var product = new Data.Models.Product
             {
                 Name = request.Name,
@@ -37,6 +38,7 @@ internal class ProductService(
             //     Price = product.Price
             // });
             
+            logger.LogInformation("Product {ProductId} created successfully", product.Id);
             return product.Id;
         }
         catch (Exception e)
@@ -52,12 +54,31 @@ internal class ProductService(
 
     public async Task<OneOf<IEnumerable<Product>, ApiError>>  GetAllProductsAsync(CancellationToken cancellationToken)
     {
+        logger.LogInformation("GetAllProductsAsync started with pagination: PageNumber={PageNumber}, PageSize={PageSize}",
+            pageNumber, pageSize);
         try
         {
+<<<<<<< Updated upstream
             var products = await dbContext.Products
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
+=======
+            var query = dbContext.Products.AsNoTracking();
+            
+            // We obviously wouldn't have this in a real system.
+            // This is just for testing purposes in case we want to pull everything 
+            if (pageNumber.HasValue && pageSize.HasValue && pageNumber.Value > 0 && pageSize.Value > 0)
+            {
+                query = query
+                    .Skip((pageNumber.Value - 1) * pageSize.Value)
+                    .Take(pageSize.Value);
+            }
+            
+            var products = await query.ToListAsync(cancellationToken);
+            
+            logger.LogInformation("ProductService.GetAllProductsAsync retrieved {ProductCount} products", products.Count);
+>>>>>>> Stashed changes
             return products.Select(p => p.ToDto()).ToList();
         }
         catch (Exception e)
@@ -71,12 +92,15 @@ internal class ProductService(
 
     public async Task<OneOf<IEnumerable<Product>, ApiError>> GetProductsByColourAsync(string colour, CancellationToken cancellationToken)
     {
+        logger.LogInformation("GetProductsByColourAsync started for colour: {Colour}", colour);
         try
         {
             var products = await dbContext.Products
                 .AsNoTracking()
                 .Where(p => p.Colour == colour)
                 .ToListAsync(cancellationToken);
+            
+            logger.LogInformation("ProductService.GetProductsByColourAsync retrieved {ProductCount} products for colour {Colour}", products.Count(), colour);
 
             return products.Select(p => p.ToDto()).ToList();
         }
