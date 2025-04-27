@@ -9,5 +9,5 @@ internal interface IProductService
 {
     Task<OneOf<IEnumerable<Product>, ApiError>> GetAllProductsAsync(int? pageNumber, int? pageSize, CancellationToken ct);
     Task<OneOf<IEnumerable<Product>, ApiError>> GetProductsByColourAsync(string color, CancellationToken ct);
-    Task<OneOf<int, ApiError>>  CreateProductAsync(CreateProductRequest product, CancellationToken ct);
+    Task<OneOf<int, ApiError, DuplicateProductError>> CreateProductAsync(CreateProductRequest product, CancellationToken ct);
 }

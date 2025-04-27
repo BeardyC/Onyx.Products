@@ -1,4 +1,5 @@
-﻿using Onyx.ProductManagement.Api.Services.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
+using Onyx.ProductManagement.Api.Services.Interfaces;
 
 namespace Onyx.ProductManagement.Api.Endpoints.Auth;
 
@@ -6,7 +7,10 @@ internal static class AuthEndpoint
 {
     public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder group)
     {
-        group.MapGet("/{user}", GenerateToken);
+        group.MapGet("/{user}", GenerateToken)
+            .Produces<string>()
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
         return group;
     }

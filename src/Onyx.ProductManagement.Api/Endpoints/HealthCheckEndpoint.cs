@@ -8,8 +8,9 @@ public static class HealthCheckEndpoint
     {
         group.MapGet("/", HealthCheck)
             .WithName("HealthCheck")
-            .WithDescription("HealthCheck");
-
+            .WithDescription("HealthCheck")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status503ServiceUnavailable);
         return group;
     }
 

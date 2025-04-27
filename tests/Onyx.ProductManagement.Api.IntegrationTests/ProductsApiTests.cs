@@ -213,6 +213,30 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         products.Should().HaveCount(expectedCount);
     }
     
+    [Fact]
+    public async Task ShouldReturnConflictWhenCreatingProductWithDuplicateName()
+    {
+        // Arrange
+        AuthenticateClient("writeUser");
+        var request = new CreateProductRequest(
+            Name: "Duplicate Product Test",
+            Price: 10.00m,
+            Colour: "Green"
+        );
+
+        // Act
+        var createResponse1 = await _client.PostAsJsonAsync("/v1/products", request);
+        createResponse1.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var createResponse2 = await _client.PostAsJsonAsync("/v1/products", request);
+
+        // Assert
+        createResponse2.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var error = await createResponse2.Content.ReadFromJsonAsync<ApiError>();
+        error.Should().NotBeNull();
+        error.Message.Should().Contain($"Product with name '{request.Name}' already exists.");
+    }
+    
     private async Task SeedTestDataAsync(params Data.Models.Product[] productsToSeed)
     {
         using var scope = _scopeFactory.CreateScope();
