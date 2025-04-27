@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
+using Onyx.ProductManagement.Api.Common;
 using Onyx.ProductManagement.Api.Constants;
 
 namespace Onyx.ProductManagement.API.Tests.Unit;
@@ -29,12 +30,13 @@ public class TokenServiceTests
     [InlineData("readUser", new[] { AppRoles.ProductReadAccess })]
     [InlineData("writeUser", new[] { AppRoles.ProductReadAccess, AppRoles.ProductWriteAccess })]
     [InlineData("adminUser", new[] { AppRoles.ProductReadAccess, AppRoles.ProductWriteAccess, AppRoles.ProductAdminAccess })]
-    [InlineData("unknownUser", new[] { AppRoles.ProductReadAccess })]
     public void ShouldGenerateTokenWithCorrectRoles(string username, string[] expectedRoles)
     {
         // Act
-        var token = _tokenService.GenerateToken(username);
+        var result = _tokenService.GenerateToken(username);
+        result.IsT0.Should().BeTrue("");
         var handler = new JwtSecurityTokenHandler();
+        var token = result.AsT0;
         var jwtToken = handler.ReadJwtToken(token);
 
         // Assert
@@ -43,5 +45,22 @@ public class TokenServiceTests
         var roleClaims = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
         roleClaims.Should().BeEquivalentTo(expectedRoles);
+    }
+    
+    [Fact]
+    public void ShouldReturnErrorForUnknownUser()
+    {
+        // Arrange
+        var unknownUsername = "unknownUser";
+
+        // Act
+        var result = _tokenService.GenerateToken(unknownUsername);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsT1.Should().BeTrue("An error should be returned for unknown users");
+        var error = result.AsT1;
+        error.Should().BeOfType<ApiError>();
+        error.Message.Should().Be("Unknown or invalid user specified.");
     }
 }

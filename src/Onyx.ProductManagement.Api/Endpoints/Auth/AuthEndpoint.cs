@@ -22,7 +22,15 @@ internal static class AuthEndpoint
                 title: "Invalid Request",
                 detail: "Username is required");
         }
-        var token = tokenService.GenerateToken(user);
-        return Results.Json(token);
+        var result = tokenService.GenerateToken(user);
+        return result.Match<IResult>(
+            token =>
+                Results.Ok(token),
+            error =>
+                Results.Problem(
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "Authentication Failed",
+                    detail: error.Message)
+        );
     }
 }
