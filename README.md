@@ -29,6 +29,7 @@ podman compose -f ./docker-compose.yml up -d
 ```
 You'll then have to manually run the scripts in your IDE of choice - [DBUp](https://dbup.readthedocs.io/en/latest/) or similar would be used to deploy the versioned sql scripts but it's out of scope for this.
 
+For the API service, you can either build and run the docker file or you can simply run the below
 ```ps
 dotnet run --launch-profile https --configuration Release --project .\src\Onyx.ProductManagement.Api\
 ```
