@@ -10,7 +10,7 @@ using Testcontainers.MsSql;
 
 namespace Onyx.ProductManagement.Api.IntegrationTests;
 
-public abstract class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
+public class ApiWebFactory : WebApplicationFactory<IApiMarker>, IAsyncLifetime
 {
     private readonly MsSqlContainer _database = new MsSqlBuilder()
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")

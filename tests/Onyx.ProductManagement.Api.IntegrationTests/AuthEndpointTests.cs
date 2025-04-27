@@ -1,9 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Onyx.ProductManagement.Api.Services.Interfaces;
 
 namespace Onyx.ProductManagement.Api.IntegrationTests;
 
