@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Onyx.ProductManagement.Api.ApiModels;
+using Onyx.ProductManagement.Api.Common;
 using Onyx.ProductManagement.Api.Endpoints.v1.Products;
 using Onyx.ProductManagement.Api.Services.Interfaces;
 
@@ -21,7 +22,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         _tokenService = sp.GetRequiredService<ITokenService>();
     }
 
-    private void AuthenticateClient(string username = "admin")
+    private void AuthenticateClient(string username)
     {
         var token = _tokenService.GenerateToken(username);
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -39,14 +40,14 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         );
 
         // Act
-        var createResponse = await _client.PostAsJsonAsync("/products", request);
+        var createResponse = await _client.PostAsJsonAsync("/v1/products", request);
 
         if (createResponse.StatusCode == HttpStatusCode.InternalServerError)
         {
             var errorContent = await createResponse.Content.ReadAsStringAsync();
             throw new Exception($"Server returned 500. Content: {errorContent}");
         }
-        // Assert creation
+        // Assert
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var location = createResponse.Headers.Location;
@@ -55,19 +56,19 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         var productId = await createResponse.Content.ReadFromJsonAsync<int>();
         productId.Should().BeGreaterThan(0);
 
-        location!.ToString().Should().Be($"/products/{productId}");
+        location.ToString().Should().Be($"/v1/products/{productId}");
 
         // Fetch products
-        var getResponse = await _client.GetAsync("/products");
+        var getResponse = await _client.GetAsync("/v1/products");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var result = await getResponse.Content.ReadFromJsonAsync<IEnumerable<Product>>();
-        var products = result.ToList();
+        var products = result!.ToList();
         products.Should().NotBeNull();
 
-        var createdProduct = products!.FirstOrDefault(p => p.Id == productId);
+        var createdProduct = products.FirstOrDefault(p => p.Id == productId);
         createdProduct.Should().NotBeNull();
-        createdProduct!.Name.Should().Be(request.Name);
+        createdProduct.Name.Should().Be(request.Name);
         createdProduct.Price.Should().Be(request.Price);
         createdProduct.Colour.Should().Be(request.Colour);
     }
@@ -84,17 +85,17 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
             Price: 49.99m
         );
 
-        await _client.PostAsJsonAsync("/products", request);
+        await _client.PostAsJsonAsync("/v1/products", request);
 
         // Act
-        var response = await _client.GetAsync("/products");
+        var response = await _client.GetAsync("/v1/products");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var products = await response.Content.ReadFromJsonAsync<IEnumerable<Product>>();
         products.Should().NotBeNull();
-        products!.Should().ContainSingle(p => p.Name == "Blue Product" && p.Colour == "Blue");
+        products.Should().ContainSingle(p => p.Name == "Blue Product" && p.Colour == "Blue");
     }
 
     [Fact]
@@ -108,17 +109,17 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
             Price: 29.99m
         );
 
-        await _client.PostAsJsonAsync("/products", createRequest);
+        await _client.PostAsJsonAsync("/v1/products", createRequest);
 
         // Act
-        var response = await _client.GetAsync("/products/colour/Green");
+        var response = await _client.GetAsync("/v1/products/colour/Green");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var products = await response.Content.ReadFromJsonAsync<IEnumerable<Product>>();
         products.Should().NotBeNull();
-        products!.Should().AllSatisfy(p => p.Colour.Should().Be("Green"));
+        products.Should().AllSatisfy(p => p.Colour.Should().Be("Green"));
     }
 
     [Fact]
@@ -133,10 +134,10 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
             Price: 59.99m
         );
 
-        await _client.PostAsJsonAsync("/products", createRequest);
+        await _client.PostAsJsonAsync("/v1/products", createRequest);
 
         // Act
-        var response = await _client.GetAsync("/products/colour/Purple"); // No product with "Purple"
+        var response = await _client.GetAsync("/v1/products/colour/Purple"); // No product with "Purple"
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -150,9 +151,34 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
     public async Task ShouldReturnUnauthorisedWhenUserIsNotAuthenticated()
     {
         // Act
-        var response = await _client.GetAsync("/products");
+        var response = await _client.GetAsync("/v1/products");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+    
+    [Fact]
+    public async Task ShouldReturnBadRequestWhenCreateProductRequestIsInvalid()
+    {
+        // Arrange
+        AuthenticateClient("adminUser");
+        var invalidRequest = new CreateProductRequest(
+            Name: "", 
+            Price: -10,
+            Colour: ""
+        );
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/v1/products", invalidRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var errorList = await response.Content.ReadFromJsonAsync<IEnumerable<ValidationFailureResponse>>();
+        var validationFailureResponses = (errorList ?? Array.Empty<ValidationFailureResponse>()).ToList();
+        validationFailureResponses.Should().NotBeNull();
+        validationFailureResponses.Should().Contain(e => e.PropertyName == "Name");
+        validationFailureResponses.Should().Contain(e => e.PropertyName == "Price");
+        validationFailureResponses.Should().Contain(e => e.PropertyName == "Colour");
     }
 }

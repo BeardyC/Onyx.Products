@@ -1,4 +1,6 @@
-﻿using Onyx.ProductManagement.Api.ApiModels;
+﻿using FluentValidation;
+using Onyx.ProductManagement.Api.ApiModels;
+using Onyx.ProductManagement.Api.Common;
 using Onyx.ProductManagement.Api.Constants;
 using Onyx.ProductManagement.Api.Services.Interfaces;
 
@@ -9,7 +11,7 @@ internal static class ProductsEndpoints
     public static RouteGroupBuilder MapProductEndpoints(this RouteGroupBuilder group)
     {
         group.MapPost("/", CreateProductAsync)
-            .RequireAuthorization(AppRoles.ProductWriteAccess, AppRoles.ProductReadAccess);
+            .RequireAuthorization(AppRoles.ProductWriteAccess);
         group.MapGet("/", GetAllProductsAsync)
             .RequireAuthorization(AppRoles.ProductReadAccess)
             .Produces<IEnumerable<Product>>();
@@ -24,27 +26,60 @@ internal static class ProductsEndpoints
 
     private static async Task<IResult> CreateProductAsync(
         CreateProductRequest request,
-        // IValidator<CreateProductRequest> validator,
+        IValidator<CreateProductRequest> validator,
         IProductService productService, CancellationToken cancellationToken)
     {
-        // var validationResult = await validator.ValidateAsync(request);
-        // if (!validationResult.IsValid)
-        //     return validationResult.ToProblemDetails();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors.Select(error => new ValidationFailureResponse
+            {
+                PropertyName = error.PropertyName,
+                ErrorMessage = error.ErrorMessage
+            });
+            return Results.BadRequest(errors);
+        }
+            
 
-        var productId = await productService.CreateProductAsync(request, cancellationToken);
-
-        return Results.Created($"/products/{productId}", productId);
+        var result = await productService.CreateProductAsync(request, cancellationToken);
+        return result.Match<IResult>(
+            productId =>
+                Results.Created($"/v1/products/{productId}", productId),
+            error => 
+                Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    title: "Product Creation Failed",
+                    detail: error.Message
+                ));
     }
 
     private static async Task<IResult> GetAllProductsAsync(IProductService productService, CancellationToken cancellationToken)
     {
-        var products = await productService.GetAllProductsAsync(cancellationToken);
-        return Results.Ok(products);
+        var result = await productService.GetAllProductsAsync(cancellationToken);
+
+        return result.Match<IResult>(
+            products =>
+                Results.Ok(products),
+            error => 
+                Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    title: "Failed to fetch products.",
+                    detail: error.Message
+                ));
     }
 
     private static async Task<IResult> GetProductsByColourAsync(string colour, IProductService productService, CancellationToken cancellationToken)
     {
-        var products = await productService.GetProductsByColourAsync(colour, cancellationToken);
-        return Results.Ok(products);
+        var result = await productService.GetProductsByColourAsync(colour, cancellationToken);
+        
+        return result.Match<IResult>(
+            products =>
+                Results.Ok(products),
+            error => 
+                Results.Problem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    title: "Failed to fetch products by colour.",
+                    detail: error.Message
+                ));
     }
 }

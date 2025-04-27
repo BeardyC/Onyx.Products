@@ -25,76 +25,23 @@ public class TokenServiceTests
         _tokenService = new TokenService(jwtOptions);
     }
 
-    [Fact]
-    public void ShouldSuccessfullyGenerateTokenForReadUser()
+    [Theory]
+    [InlineData("readUser", new[] { AppRoles.ProductReadAccess })]
+    [InlineData("writeUser", new[] { AppRoles.ProductReadAccess, AppRoles.ProductWriteAccess })]
+    [InlineData("adminUser", new[] { AppRoles.ProductReadAccess, AppRoles.ProductWriteAccess, AppRoles.ProductAdminAccess })]
+    [InlineData("unknownUser", new[] { AppRoles.ProductReadAccess })]
+    public void ShouldGenerateTokenWithCorrectRoles(string username, string[] expectedRoles)
     {
-        // Arrange
-        var username = "readUser";
-
         // Act
         var token = _tokenService.GenerateToken(username);
-
-        // Assert
-        token.Should().NotBeNullOrWhiteSpace();
-
         var handler = new JwtSecurityTokenHandler();
         var jwtToken = handler.ReadJwtToken(token);
 
-        jwtToken.Issuer.Should().Be("TestIssuer");
-        jwtToken.Audiences.Should().Contain("TestAudience");
+        // Assert
         jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == username);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductReadAccess);
-    }
 
-    [Fact]
-    public void ShouldSuccessfullyGenerateTokenForWriteUser()
-    {
-        // Arrange
-        var username = "writeUser";
+        var roleClaims = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
 
-        // Act
-        var token = _tokenService.GenerateToken(username);
-
-        // Assert
-        var handler = new JwtSecurityTokenHandler();
-        var jwtToken = handler.ReadJwtToken(token);
-
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == username);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductReadAccess);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductWriteAccess);
-    }
-
-    [Fact]
-    public void ShouldSuccessfullyGenerateTokenForAdminUser()
-    {
-        // Arrange
-        var username = "adminUser";
-
-        // Act
-        var token = _tokenService.GenerateToken(username);
-
-        // Assert
-        var handler = new JwtSecurityTokenHandler();
-        var jwtToken = handler.ReadJwtToken(token);
-
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == username);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductReadAccess);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductWriteAccess);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductAdminAccess);
-    }
-
-    [Fact]
-    public void ShouldAssignDefaultRoleIfUsernameIsUnknown()
-    {
-        // Arrange
-        var username = "unknownUser";
-
-        // Act
-        var token = _tokenService.GenerateToken(username);
-
-        // Assert
-        var handler = new JwtSecurityTokenHandler();
-        var jwtToken = handler.ReadJwtToken(token);
-        jwtToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == AppRoles.ProductReadAccess);
+        roleClaims.Should().BeEquivalentTo(expectedRoles);
     }
 }

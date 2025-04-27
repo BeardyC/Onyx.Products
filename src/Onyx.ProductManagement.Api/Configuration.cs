@@ -3,7 +3,7 @@
 namespace Onyx.ProductManagement.Api;
 
 [ExcludeFromCodeCoverage]
-public class JwtSettings
+internal class JwtSettings
 {
     public const string SectionName = "Jwt";
         
