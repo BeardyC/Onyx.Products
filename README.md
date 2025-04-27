@@ -69,6 +69,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   **Response codes:**
   - `200 OK` - Service is healthy and reachable.
   - `503 Service Unavailable` - Service is unhealthy or degraded.
+ 
   **Response example:**
 
   ```json
