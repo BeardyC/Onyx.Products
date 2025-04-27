@@ -109,6 +109,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   - `201 Created` - Product created successfully. The response includes the ID of the created product and a Location header pointing to the new resource.
   - `400 Bad Request` - Returned for invalid product data due to validation errors.
   - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
+  - `409 Conflict` - Returned if an already existing product exists with that given name (Unique Constraint on Name column).
   - `500 Internal Server Error` - Returned if an unexpected error occurs during product creation.
 
 ---
