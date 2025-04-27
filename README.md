@@ -25,7 +25,7 @@ This is a minimal, production-grade .NET 8 Web API for managing Products, design
 
 Start SQL server 
 ```ps
-podman compose up -d -f ./docker-compose.yml
+podman compose -f ./docker-compose.yml up -d
 ```
 You'll then have to manually run the scripts in your IDE of choice - [DBUp](https://dbup.readthedocs.io/en/latest/) or similar would be used to deploy the versioned sql scripts but it's out of scope for this.
 
