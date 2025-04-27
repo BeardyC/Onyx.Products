@@ -56,8 +56,6 @@ Example:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 ```
 
-> You can generate and test tokens using the Swagger UI or your authentication provider.
-
 ## Health Check
 
 - `GET /health`  
