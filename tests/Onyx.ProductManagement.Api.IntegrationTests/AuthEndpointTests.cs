@@ -14,7 +14,7 @@ public class AuthEndpointTests(ApiWebFactory factory) : IClassFixture<ApiWebFact
     [Fact]
     public async Task ShouldGenerateTokenSuccessfullyForValidUser()
     {
-        var username = "testUser";
+        var username = "adminUser";
 
         var response = await _client.GetAsync($"/auth/{username}");
 
@@ -22,5 +22,15 @@ public class AuthEndpointTests(ApiWebFactory factory) : IClassFixture<ApiWebFact
 
         var token = await response.Content.ReadFromJsonAsync<string>();
         token.Should().NotBeNullOrEmpty();
+    }
+    
+    [Fact]
+    public async Task ShouldGenerateTokenSuccessfullyForInvalidUser()
+    {
+        var username = "testUser";
+
+        var response = await _client.GetAsync($"/auth/{username}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

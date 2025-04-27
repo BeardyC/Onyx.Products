@@ -25,7 +25,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
     private void AuthenticateClient(string username)
     {
         var token = _tokenService.GenerateToken(username);
-        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.AsT0);
     }
     
     [Fact]
