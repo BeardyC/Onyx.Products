@@ -1,5 +1,13 @@
-IF NOT EXISTS (SELECT name FROM sys.indexes WHERE name = 'IX_Products_Colour')
-    BEGIN
-        CREATE NONCLUSTERED INDEX IX_Products_Colour ON dbo.Products(Colour);
-    END
+USE ProductsDB;
 GO
+
+IF OBJECT_ID('dbo.Products', 'U') IS NULL
+BEGIN
+CREATE TABLE dbo.Products (
+                              Id INT IDENTITY(1,1) PRIMARY KEY,
+                              Name NVARCHAR(100) NOT NULL,
+                              Colour NVARCHAR(50) NOT NULL,
+                              Price DECIMAL(18,2) NOT NULL,
+                              CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+);
+END
