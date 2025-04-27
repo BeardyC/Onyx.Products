@@ -201,13 +201,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   - `401 Unauthorized` - Returned if a valid JWT Bearer Token is not provided.
   - `500 Internal Server Error` - Returned if an unexpected error occurs while fetching products by colour.    
 
-Sources and related content
-
-
 ---
 
 # Swagger Documentation
 
-You can access the full interactive API documentation via Swagger UI when running locally or in your development environment.
+You can access the full interactive API documentation via the Swagger UI.
 
 ---
