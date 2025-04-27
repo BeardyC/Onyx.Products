@@ -69,7 +69,27 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
   **Response codes:**
   - `200 OK` - Service is healthy and reachable.
   - `503 Service Unavailable` - Service is unhealthy or degraded.
+  **Response example:**
 
+  ```json
+  {
+    "status": "Healthy",
+    "checks": [
+      {
+        "name": "api_status",
+        "status": "Healthy",
+        "description": "API is running.",
+        "duration": 0.0000031
+      },
+      {
+        "name": "products_db",
+        "status": "Healthy",
+        "description": null,
+        "duration": 0.0011731
+      }
+    ]
+  }
+  ```
 ---
 
 ### Authentication
