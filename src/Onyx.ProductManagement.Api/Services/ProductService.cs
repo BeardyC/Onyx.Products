@@ -17,6 +17,7 @@ internal class ProductService(
     {
         try
         {
+            logger.LogInformation("CreateProductAsync started for product: {ProductName}", request.Name);
             var product = new Data.Models.Product
             {
                 Name = request.Name,
@@ -37,6 +38,7 @@ internal class ProductService(
             //     Price = product.Price
             // });
             
+            logger.LogInformation("Product {ProductId} created successfully", product.Id);
             return product.Id;
         }
         catch (Exception e)
@@ -54,6 +56,9 @@ internal class ProductService(
     {
         try
         {
+            logger.LogInformation("GetAllProductsAsync started with pagination: PageNumber={PageNumber}, PageSize={PageSize}",
+                pageNumber, pageSize);
+            
             var query = dbContext.Products.AsNoTracking();
             
             // We obviously wouldn't have this in a real system.
@@ -66,7 +71,8 @@ internal class ProductService(
             }
             
             var products = await query.ToListAsync(cancellationToken);
-
+            
+            logger.LogInformation("ProductService.GetAllProductsAsync retrieved {ProductCount} products", products.Count);
             return products.Select(p => p.ToDto()).ToList();
         }
         catch (Exception e)
@@ -82,10 +88,14 @@ internal class ProductService(
     {
         try
         {
+            logger.LogInformation("GetProductsByColourAsync started for colour: {Colour}", colour);
+            
             var products = await dbContext.Products
                 .AsNoTracking()
                 .Where(p => p.Colour == colour)
                 .ToListAsync(cancellationToken);
+
+            logger.LogInformation("ProductService.GetProductsByColourAsync retrieved {ProductCount} products for colour {Colour}", products.Count(), colour);
 
             return products.Select(p => p.ToDto()).ToList();
         }
