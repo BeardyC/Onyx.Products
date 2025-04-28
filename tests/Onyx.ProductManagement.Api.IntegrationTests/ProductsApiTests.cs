@@ -23,7 +23,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
 
         var sp = factory.Services.CreateScope().ServiceProvider;
         _tokenService = sp.GetRequiredService<ITokenService>();
-        _scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>(); // Add this line
+        _scopeFactory = factory.Services.GetRequiredService<IServiceScopeFactory>();
 
     }
 
@@ -141,7 +141,7 @@ public class ProductsApiTests : IClassFixture<ApiWebFactory>
         await _client.PostAsJsonAsync("/v1/products", createRequest);
 
         // Act
-        var response = await _client.GetAsync("/v1/products/colour/Purple"); // No product with "Purple"
+        var response = await _client.GetAsync("/v1/products/colour/Purple");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
